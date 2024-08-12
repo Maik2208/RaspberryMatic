@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-OCCU_VERSION = 3.71.12-1
+OCCU_VERSION = 3.77.6-1
 OCCU_SITE = $(call github,jens-maus,occu,$(OCCU_VERSION))
 OCCU_LICENSE = HMSL
 OCCU_LICENSE_FILES = LicenseDE.txt
@@ -27,6 +27,11 @@ ifeq ($(BR2_PACKAGE_OCCU),y)
 		chmod 0640 $(TARGET_DIR)/usr/local/etc/config/shadow
 		rm -f $(TARGET_DIR)/etc/shadow
 		ln -snf config/shadow $(TARGET_DIR)/etc/
+
+		# relink /run to /var/run
+		rm -rf $(TARGET_DIR)/run $(TARGET_DIR)/var/run
+		mkdir -p $(TARGET_DIR)/var/run
+		ln -snf var/run $(TARGET_DIR)/
 
 		# relink resolv.conf to /var/etc
 		rm -f $(TARGET_DIR)/etc/resolv.conf
