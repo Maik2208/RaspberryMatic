@@ -1,6 +1,6 @@
 ---
 name: RaspberryMatic CCU
-version: 3.77.6.20240720
+version: 3.79.6.20241122
 slug: raspberrymatic
 image: ghcr.io/jens-maus/raspberrymatic
 arch:
@@ -16,10 +16,10 @@ panel_icon: mdi:router-wireless
 startup: services
 map:
   - type: data
-    read_only: False
+    read_only: false
     path: /usr/local
   - type: backup
-    read_only: False
+    read_only: false
 init: false
 backup_pre: /bin/sh -c "/bin/echo 'load tclrega.so; rega system.Save()' | /bin/tclsh && /bin/sync"
 backup_exclude:

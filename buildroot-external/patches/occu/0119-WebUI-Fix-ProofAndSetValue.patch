@@ -55,7 +55,7 @@
  }
 --- occu/WebUI/www/config/easymodes/etc/hmipChannelConfigDialogs.tcl.orig
 +++ occu/WebUI/www/config/easymodes/etc/hmipChannelConfigDialogs.tcl
-@@ -550,7 +550,7 @@
+@@ -695,7 +695,7 @@
          # append html "<td>[getTextField $param $ps($param) $chn $prn]&nbsp[getUnit $param]&nbsp;[getMinMaxValueDescr $param]</td>"
  
          append html "<td>"
@@ -64,7 +64,7 @@
            append html "<input id='separate_CHANNEL_$chn\_$prn' name='$param' type='text' class='hidden'>"
          append html "</td>"
        append html "</tr>"
-@@ -2971,7 +2971,7 @@
+@@ -3774,7 +3774,7 @@
          append html "<td>\${stringTableCondThresholdLo}</td>"
          append html "<td>"
  
@@ -73,7 +73,7 @@
            append html "[getTextField $param $ps($param) $chn $prn class=\"hidden\"]"
  
          append html "</td>"
-@@ -2985,7 +2985,7 @@
+@@ -3788,7 +3788,7 @@
          append html "<td>\${stringTableCondThresholdHi}</td>"
          append html "<td>"
  
@@ -181,7 +181,7 @@
       default {return "<span class=\"attention\">max value not available</span>"}
      }
    }
-@@ -86,7 +96,7 @@
+@@ -132,7 +142,7 @@
  
    # Limit float to 1 decimal places
    if {([llength [split $min "."]] == 2) || ([llength [split $max "."]] == 2)} {
@@ -190,7 +190,7 @@
        set min [format {%1.1f} $min]
        set max [format {%1.1f} $max]
      } else {
-@@ -187,7 +197,7 @@
+@@ -231,7 +241,7 @@
        hmip-usbsm
         {
          if {$param == "TX_THRESHOLD_POWER"} {return "W (0.0 - [getUserDefinedMaxValue $devType $param])"}
@@ -199,17 +199,20 @@
        }
        default {return "<span class=\"attention\">missing description</span>"}
     }
-@@ -243,6 +253,9 @@
+@@ -287,6 +297,12 @@
        set maxValue "stringUTF8"
        set maxLength "maxLength=16"
        set sizeTextfield 16
-+    } elseif {($param == "METER_CONSTANT_VOLUME") || ($param == "METER_CONSTANT_ENERGY")} {
++    } elseif {($param == "METER_CONSTANT_VOLUME")} {
 +      set minValue [format {%1.2f} $param_descr(MIN)]
 +      set maxValue [format {%1.2f} $param_descr(MAX)]
++    } elseif {($param == "METER_CONSTANT_ENERGY")} {
++      set minValue [format {%1.0f} $param_descr(MIN)]
++      set maxValue [format {%1.0f} $param_descr(MAX)]
      }
    }
  
-@@ -265,7 +278,7 @@
+@@ -309,7 +325,7 @@
  
    # Limit float to 2 decimal places
    if {[llength [split $value "."]] == 2} {
@@ -218,7 +221,7 @@
        catch {set value [format {%1.1f} $value]}
      } else {
        catch {set value [format {%1.2f} $value]}
-@@ -348,7 +361,7 @@
+@@ -392,7 +408,7 @@
    }
  
    set s "<input id=$elemIdTmp type=\"text\" size=\"5\" value=[format %.0f [expr $value * 100]] name=$param\_tmp onblur="
@@ -227,6 +230,28 @@
    append s "jQuery('#separate_CHANNEL\_$chn\_$prn').val(this.value / 100);\">"
  
    append s "<input id=$elemId type=\"text\" size=\"5\" class=\"hidden\" value=$value name=$param>"
+@@ -406,10 +422,18 @@
+   set select ""
+   foreach val [lsort -real [array names optionValues]] {
+ 
+-     if {$val == $value} {
+-      set select "selected=\"selected\""
++     if {[string is double -strict $value]} {
++       if {[expr abs($val - $value)] < 1e-15} {
++         set select "selected=\"selected\""
++       } else {
++         set select ""
++       }
+      } else {
+-      set select ""
++       if {$val == $value} {
++         set select "selected=\"selected\""
++       } else {
++         set select ""
++       }
+      }
+ 
+      append s "<option class=\"[extractParamFromTranslationKey $optionValues($val)]\" value=$val $select>$optionValues($val)</option>"
 --- occu/WebUI/www/config/easymodes/hm-cc-vg-1_master.tcl.orig
 +++ occu/WebUI/www/config/easymodes/hm-cc-vg-1_master.tcl
 @@ -24,7 +24,12 @@
@@ -489,12 +514,12 @@
  
 --- occu/WebUI/www/config/ic_common.tcl.orig
 +++ occu/WebUI/www/config/ic_common.tcl
-@@ -1395,7 +1395,7 @@
+@@ -1380,7 +1380,7 @@
  
            append s "<input type=\"hidden\" name=\"$param_id\"   value=\"$value_orig\" $id $access style=\"visibility:hidden;display:none;\" />"
            append s "<input type=\"text\"   name=\"__$param_id\" value=\"$value\"       id=\"$input_idval\" $access $hidden"
--          append s "  onblur=\" ProofAndSetValue('$input_idval', '${idval}', [expr $min + 0.001], [expr $max + 0.001], parseFloat([expr 1 / $factor]));\" /></td>"
-+          append s "  onblur=\" ProofAndSetValue('$input_idval', '${idval}', '$min', '$max', parseFloat([expr 1 / $factor]));\" /></td>"
+-          append s "  onblur=\"_iface='$iface'; ProofAndSetValue('$input_idval', '${idval}', [expr $min + 0.001], [expr $max + 0.001], parseFloat([expr 1 / $factor]));\" /></td>"
++          append s "  onblur=\"_iface='$iface'; ProofAndSetValue('$input_idval', '${idval}', '$min', '$max', parseFloat([expr 1 / $factor]));\" /></td>"
            append s "<td><div id=\"${input_idval}_unit\" $hidden>$unit ($min-$max)</div></td>"
        }
        "ENUM" {
@@ -520,7 +545,7 @@
            append s1 "</td>"
 --- occu/WebUI/www/webui/webui.js.orig
 +++ occu/WebUI/www/webui/webui.js
-@@ -43487,56 +43487,71 @@
+@@ -45514,49 +45514,64 @@
      srcElm.value = value;
    }
  
@@ -592,19 +617,22 @@
    {
      srcElm.style.backgroundColor = "#fffffe";
 -    dstElm.value = value * dstValueFactor;
--    srcElm.value = dstElm.value;
 +    dstElm.value = (parsedValue.toFixed(digits) * dstValueFactor);
-+    srcElm.value = parsedValue.toFixed(digits);
+     if ((typeof _iface == "undefined") || (_iface != "BidCos-RF")) {
+-      srcElm.value = dstElm.value;
++      srcElm.value = parsedValue.toFixed(digits);
+     }
      srcElm.setAttribute("valvalid", "true");
    }
-   else
+@@ -45564,9 +45579,9 @@
    {
      srcElm.setAttribute("valvalid", "false");
      srcElm.style.backgroundColor = "red";
 -    dstElm.value = finalVal * dstValueFactor;
--    srcElm.value = dstElm.value;
 +    dstElm.value = (finalVal.toFixed(digits) * dstValueFactor);
-+    srcElm.value = finalVal.toFixed(digits);
+     if ((typeof _iface == "undefined") || (_iface != "BidCos-RF")) {
+-      srcElm.value = dstElm.value;
++      srcElm.value = finalVal.toFixed(digits);
+     }
      window.setTimeout(function(){srcElm.style.backgroundColor = "white";},1000);
    }
- };
